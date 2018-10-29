@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/urfave/negroni"
 )
 
@@ -39,7 +39,8 @@ type Middleware struct {
 	clock timer
 
 	// Exclude URLs from logging
-	excludeURLs []string
+	excludeURLs    []string
+	ExcluceURLFunc func(string) bool
 }
 
 // NewMiddleware returns a new *Middleware, yay!
@@ -108,6 +109,12 @@ func (m *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 
 	for _, u := range m.excludeURLs {
 		if r.URL.Path == u {
+			next(rw, r)
+			return
+		}
+	}
+	if m.ExcluceURLFunc != nil {
+		if m.ExcluceURLFunc(r.URL.Path) {
 			next(rw, r)
 			return
 		}
